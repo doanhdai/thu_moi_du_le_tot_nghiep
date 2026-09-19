@@ -1,5 +1,5 @@
 /**
- * Graduation Invitation - Mobile Showcase
+ * ThChang | Graduation Invitation - Mobile Showcase
  * - Falling Stars & Sparkles Animation (5-point stars, diamond sparkles, shooting stars, tap burst)
  * - Autoplay Background Music with Mobile First-Touch Fallback
  * - Floating Music Controller
@@ -340,7 +340,7 @@
     if (bgAudio && bgAudio.paused) {
       bgAudio.play().then(() => {
         updateMusicUI(true);
-      }).catch(() => {});
+      }).catch(() => { });
     }
     interactionEvents.forEach(evt => window.removeEventListener(evt, handleFirstInteraction));
   }
@@ -351,12 +351,100 @@
     musicBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       if (bgAudio.paused) {
-        bgAudio.play().then(() => updateMusicUI(true)).catch(() => {});
+        bgAudio.play().then(() => updateMusicUI(true)).catch(() => { });
       } else {
         bgAudio.pause();
         updateMusicUI(false);
       }
     });
   }
+
+  /* ==========================================================================
+     3. Dynamic UI Image Cropping for Mobile (Zero Scroll, Full Width)
+     ========================================================================== */
+  function adjustImageCropForMobile() {
+    const img = document.getElementById('invitation-img');
+    const frame = document.getElementById('card-frame');
+    if (!img || !frame) return;
+
+    if (window.innerWidth <= 768) {
+      const winW = window.innerWidth;
+      const winH = window.innerHeight; // Chiều cao thực tế của màn hình mobile
+
+      const naturalW = img.naturalWidth || 840;
+      const naturalH = img.naturalHeight || 1871;
+
+      // Chiều cao của ảnh khi hiển thị full width 100%
+      const renderedH = winW * (naturalH / naturalW);
+
+      if (renderedH > winH) {
+        // Lượng chiều cao vượt quá màn hình cần cắt bớt
+        const excessH = renderedH - winH;
+
+        // Giới hạn cắt trên tối đa ~4% để giữ trọn quả cầu disco và nội dung
+        const maxTopCrop = renderedH * 0.042;
+        // Cắt ở trên một phần nhỏ (~28% phần thừa hoặc tối đa maxTopCrop), phần còn lại cắt ở dưới (khoảng giấy trắng)
+        const topCrop = Math.min(excessH * 0.28, maxTopCrop);
+
+        frame.style.width = winW + 'px';
+        frame.style.height = winH + 'px';
+        frame.style.maxHeight = winH + 'px';
+        frame.style.overflow = 'hidden';
+        frame.style.position = 'relative';
+
+        img.style.width = winW + 'px';
+        img.style.height = renderedH + 'px';
+        img.style.maxWidth = 'none';
+        img.style.maxHeight = 'none';
+        img.style.position = 'absolute';
+        img.style.left = '0';
+        img.style.top = `-${topCrop.toFixed(1)}px`;
+      } else {
+        // Nếu màn hình điện thoại đủ cao, căn vừa vặn không cắt
+        frame.style.width = winW + 'px';
+        frame.style.height = winH + 'px';
+        frame.style.maxHeight = winH + 'px';
+        frame.style.overflow = 'hidden';
+        frame.style.position = 'relative';
+
+        img.style.width = winW + 'px';
+        img.style.height = 'auto';
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = 'none';
+        img.style.position = 'relative';
+        img.style.top = '0';
+        img.style.left = '0';
+      }
+    } else {
+      // Desktop: Reset để khung hiển thị bình thường
+      frame.style.width = '';
+      frame.style.height = '';
+      frame.style.maxHeight = '';
+      frame.style.overflow = '';
+      frame.style.position = '';
+
+      img.style.width = '';
+      img.style.height = '';
+      img.style.maxWidth = '';
+      img.style.maxHeight = '';
+      img.style.position = '';
+      img.style.top = '';
+      img.style.left = '';
+    }
+  }
+
+  // Kích hoạt khi ảnh tải xong hoặc thay đổi kích thước/xoay màn hình
+  const targetImg = document.getElementById('invitation-img');
+  if (targetImg) {
+    if (targetImg.complete) {
+      adjustImageCropForMobile();
+    } else {
+      targetImg.addEventListener('load', adjustImageCropForMobile);
+    }
+  }
+  window.addEventListener('resize', adjustImageCropForMobile);
+  window.addEventListener('orientationchange', () => {
+    setTimeout(adjustImageCropForMobile, 120);
+  });
 
 })();

@@ -305,13 +305,20 @@
      ========================================================================== */
   const bgAudio = document.getElementById('bg-music');
   const musicBtn = document.getElementById('music-toggle-btn');
+  const tapHint = document.getElementById('tap-to-play');
 
   function updateMusicUI(isPlaying) {
-    if (!musicBtn) return;
-    if (isPlaying) {
-      musicBtn.classList.add('playing');
-    } else {
-      musicBtn.classList.remove('playing');
+    if (musicBtn) {
+      if (isPlaying) {
+        musicBtn.classList.add('playing');
+      } else {
+        musicBtn.classList.remove('playing');
+      }
+    }
+    if (tapHint) {
+      if (isPlaying) {
+        tapHint.classList.add('hidden');
+      }
     }
   }
 
@@ -322,31 +329,45 @@
       playPromise
         .then(() => {
           updateMusicUI(true);
+          if (tapHint) tapHint.classList.add('hidden');
         })
         .catch(() => {
+          // Bị trình duyệt di động chặn unmuted autoplay
           updateMusicUI(false);
+          if (tapHint) tapHint.classList.remove('hidden');
         });
     }
   }
 
-  // 1. Try immediate autoplay on page load
-  window.addEventListener('DOMContentLoaded', () => {
+  // 1. Thử phát ngay lập tức khi tải trang
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startAudio);
+  } else {
     startAudio();
-  });
+  }
+  window.addEventListener('load', startAudio);
 
-  // 2. Play upon first user interaction (touch, click, scroll) for mobile browser policies
-  const interactionEvents = ['touchstart', 'touchend', 'click', 'pointerdown', 'keydown', 'scroll'];
-  function handleFirstInteraction() {
-    if (bgAudio && bgAudio.paused) {
+  // 2. Tự động phát ngay khi người dùng chạm bất kỳ đâu vào màn hình
+  let userInteracted = false;
+  function handleAnyUserInteraction() {
+    if (userInteracted && bgAudio && !bgAudio.paused) return;
+
+    if (bgAudio) {
       bgAudio.play().then(() => {
+        userInteracted = true;
         updateMusicUI(true);
+        if (tapHint) tapHint.classList.add('hidden');
       }).catch(() => { });
     }
-    interactionEvents.forEach(evt => window.removeEventListener(evt, handleFirstInteraction));
   }
-  interactionEvents.forEach(evt => window.addEventListener(evt, handleFirstInteraction, { passive: true, once: true }));
 
-  // 3. Floating Button Click Toggle
+  const interactionEvents = ['touchstart', 'touchend', 'click', 'pointerdown', 'pointerup', 'scroll'];
+  interactionEvents.forEach(evt => {
+    window.addEventListener(evt, handleAnyUserInteraction, { capture: true, passive: true });
+    document.addEventListener(evt, handleAnyUserInteraction, { capture: true, passive: true });
+  });
+
+  // 3. Nút đĩa than bật/tắt thủ công
   if (musicBtn && bgAudio) {
     musicBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -356,6 +377,18 @@
         bgAudio.pause();
         updateMusicUI(false);
       }
+    });
+  }
+
+  // 4. Nhấn trực tiếp vào gợi ý bật nhạc
+  if (tapHint && bgAudio) {
+    tapHint.addEventListener('click', (e) => {
+      e.stopPropagation();
+      bgAudio.play().then(() => {
+        userInteracted = true;
+        updateMusicUI(true);
+        tapHint.classList.add('hidden');
+      }).catch(() => { });
     });
   }
 

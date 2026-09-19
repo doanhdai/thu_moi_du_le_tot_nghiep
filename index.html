@@ -4,8 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Thư Mời Dự Lễ Tốt Nghiệp ThChang | Graduation Invitationg</title>
-  <meta property="og:title" content="Thư Mời Dự Lễ Tốt Nghiệp ThChang | Graduation Invitationg">
+  <title>ThChang | Graduation Invitation</title>
+  <meta property="og:title" content="ThChang | Graduation Invitation">
   <meta property="og:image" content="thu_moi_cua_trang.png">
   <meta property="og:type" content="website">
 
@@ -20,7 +20,8 @@
   <canvas id="stars-canvas" aria-hidden="true"></canvas>
 
   <!-- Background Music -->
-  <audio id="bg-music" loop preload="auto">
+  <audio id="bg-music" autoplay loop preload="auto" playsinline webkit-playsinline src="music.mp3">
+    <source src="music.mp3" type="audio/mpeg">
     <source src="snaptik.vn_7618187831248260359.mp3" type="audio/mpeg">
   </audio>
 
@@ -33,6 +34,13 @@
       <span class="eq-bar"></span>
     </div>
   </button>
+
+  <!-- Tap to Play Hint (Shown if mobile browser blocks unmuted autoplay) -->
+  <div id="tap-to-play" class="tap-to-play-hint hidden" role="button" tabindex="0">
+    <span class="music-note-icon">🎵</span>
+    <span>Chạm vào màn hình để bật nhạc</span>
+    <span class="tap-sparkle">✨</span>
+  </div>
 
   <!-- Mobile Invitation Showcase (Only 1 image) -->
   <main class="invitation-screen">

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Thư Mời Dự Lễ Tốt Nghiệp</title>
+  
+  <meta name="description" content="Thư mời dự lễ tốt nghiệp và chụp ảnh kỷ yếu">
+  <meta property="og:title" content="Thư Mời Dự Lễ Tốt Nghiệp">
+  <meta property="og:image" content="thu_moi.png">
+  <meta property="og:type" content="website">
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Canvas Falling Stars & Sparkles -->
+  <canvas id="stars-canvas" aria-hidden="true"></canvas>
+
+  <!-- Background Music -->
+  <audio id="bg-music" loop preload="auto">
+    <source src="snaptik.vn_7618187831248260359.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- Floating Music Toggle Button -->
+  <button id="music-toggle-btn" class="floating-music-btn" aria-label="Bật/Tắt nhạc" title="Bật/Tắt nhạc">
+    <div class="vinyl-disc"></div>
+    <div class="eq-bars">
+      <span class="eq-bar"></span>
+      <span class="eq-bar"></span>
+      <span class="eq-bar"></span>
+    </div>
+  </button>
+
+  <!-- Mobile Invitation Showcase (Only 1 image) -->
+  <main class="invitation-screen">
+    <div class="card-frame">
+      <img 
+        src="thu_moi.png" 
+        alt="Thư mời dự lễ tốt nghiệp" 
+        class="invitation-img"
+        loading="eager"
+      >
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

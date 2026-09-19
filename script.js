@@ -360,7 +360,7 @@
   }
 
   /* ==========================================================================
-     3. Dynamic UI Image Cropping for Mobile (Zero Scroll, Full Width)
+     3. Dynamic UI Image Cropping for Mobile (Zero Scroll, Guaranteed Full Width)
      ========================================================================== */
   function adjustImageCropForMobile() {
     const img = document.getElementById('invitation-img');
@@ -369,67 +369,80 @@
 
     if (window.innerWidth <= 768) {
       const winW = window.innerWidth;
-      const winH = window.innerHeight; // Chiều cao thực tế của màn hình mobile
+      const winH = window.innerHeight;
+
+      // 1. Khung chứa bung tràn tuyệt đối 100vw x winH
+      frame.style.setProperty('width', '100vw', 'important');
+      frame.style.setProperty('min-width', '100vw', 'important');
+      frame.style.setProperty('max-width', '100vw', 'important');
+      frame.style.setProperty('height', winH + 'px', 'important');
+      frame.style.setProperty('max-height', winH + 'px', 'important');
+      frame.style.setProperty('overflow', 'hidden', 'important');
+      frame.style.setProperty('position', 'relative', 'important');
+      frame.style.setProperty('margin', '0', 'important');
+      frame.style.setProperty('padding', '0', 'important');
+      frame.style.setProperty('background', 'transparent', 'important');
 
       const naturalW = img.naturalWidth || 840;
       const naturalH = img.naturalHeight || 1871;
 
-      // Chiều cao của ảnh khi hiển thị full width 100%
+      // Chiều cao tự nhiên khi bung chạm 2 mép màn hình (width = winW)
       const renderedH = winW * (naturalH / naturalW);
 
-      if (renderedH > winH) {
-        // Lượng chiều cao vượt quá màn hình cần cắt bớt
+      img.style.setProperty('left', '0', 'important');
+      img.style.setProperty('right', '0', 'important');
+      img.style.setProperty('width', '100vw', 'important');
+      img.style.setProperty('min-width', '100vw', 'important');
+      img.style.setProperty('max-width', '100vw', 'important');
+      img.style.setProperty('margin', '0', 'important');
+      img.style.setProperty('padding', '0', 'important');
+
+      if (renderedH >= winH) {
+        // Ảnh dài hơn màn hình: Cắt bớt phần đỉnh một chút, phần còn lại cắt ở đáy
         const excessH = renderedH - winH;
+        const maxTopCrop = renderedH * 0.038;
+        const topCrop = Math.min(excessH * 0.25, maxTopCrop);
 
-        // Giới hạn cắt trên tối đa ~4% để giữ trọn quả cầu disco và nội dung
-        const maxTopCrop = renderedH * 0.042;
-        // Cắt ở trên một phần nhỏ (~28% phần thừa hoặc tối đa maxTopCrop), phần còn lại cắt ở dưới (khoảng giấy trắng)
-        const topCrop = Math.min(excessH * 0.28, maxTopCrop);
-
-        frame.style.width = winW + 'px';
-        frame.style.height = winH + 'px';
-        frame.style.maxHeight = winH + 'px';
-        frame.style.overflow = 'hidden';
-        frame.style.position = 'relative';
-
-        img.style.width = winW + 'px';
-        img.style.height = renderedH + 'px';
-        img.style.maxWidth = 'none';
-        img.style.maxHeight = 'none';
-        img.style.position = 'absolute';
-        img.style.left = '0';
-        img.style.top = `-${topCrop.toFixed(1)}px`;
+        img.style.setProperty('position', 'absolute', 'important');
+        img.style.setProperty('top', `-${topCrop.toFixed(1)}px`, 'important');
+        img.style.setProperty('height', renderedH + 'px', 'important');
+        img.style.setProperty('max-height', 'none', 'important');
+        img.style.setProperty('object-fit', 'fill', 'important');
       } else {
-        // Nếu màn hình điện thoại đủ cao, căn vừa vặn không cắt
-        frame.style.width = winW + 'px';
-        frame.style.height = winH + 'px';
-        frame.style.maxHeight = winH + 'px';
-        frame.style.overflow = 'hidden';
-        frame.style.position = 'relative';
-
-        img.style.width = winW + 'px';
-        img.style.height = 'auto';
-        img.style.maxWidth = '100%';
-        img.style.maxHeight = 'none';
-        img.style.position = 'relative';
-        img.style.top = '0';
-        img.style.left = '0';
+        // Màn hình rất dài: Phủ kín 100% màn hình không để lộ khoảng trống 2 bên
+        img.style.setProperty('position', 'absolute', 'important');
+        img.style.setProperty('top', '0', 'important');
+        img.style.setProperty('height', winH + 'px', 'important');
+        img.style.setProperty('max-height', winH + 'px', 'important');
+        img.style.setProperty('object-fit', 'cover', 'important');
+        img.style.setProperty('object-position', 'center 35%', 'important');
       }
     } else {
-      // Desktop: Reset để khung hiển thị bình thường
-      frame.style.width = '';
-      frame.style.height = '';
-      frame.style.maxHeight = '';
-      frame.style.overflow = '';
-      frame.style.position = '';
+      // Desktop: Reset để khung mockup hiển thị bình thường
+      frame.style.removeProperty('width');
+      frame.style.removeProperty('min-width');
+      frame.style.removeProperty('max-width');
+      frame.style.removeProperty('height');
+      frame.style.removeProperty('max-height');
+      frame.style.removeProperty('overflow');
+      frame.style.removeProperty('position');
+      frame.style.removeProperty('margin');
+      frame.style.removeProperty('padding');
+      frame.style.removeProperty('background');
 
-      img.style.width = '';
-      img.style.height = '';
-      img.style.maxWidth = '';
-      img.style.maxHeight = '';
-      img.style.position = '';
-      img.style.top = '';
-      img.style.left = '';
+      img.style.removeProperty('position');
+      img.style.removeProperty('left');
+      img.style.removeProperty('right');
+      img.style.removeProperty('top');
+      img.style.removeProperty('width');
+      img.style.removeProperty('min-width');
+      img.style.removeProperty('max-width');
+      img.style.removeProperty('height');
+      img.style.removeProperty('max-height');
+      img.style.removeProperty('margin');
+      img.style.removeProperty('padding');
+      img.style.removeProperty('object-fit');
+      img.style.removeProperty('object-position');
     }
   }
 

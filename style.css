@@ -126,46 +126,6 @@ html, body {
   100% { height: 13px; }
 }
 
-/* Floating Tap to Play Hint */
-.tap-to-play-hint {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(18, 18, 26, 0.88);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(244, 192, 88, 0.55);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(244, 192, 88, 0.3);
-  color: #f4c058;
-  font-size: 0.86rem;
-  font-weight: 600;
-  padding: 10px 22px;
-  border-radius: 40px;
-  cursor: pointer;
-  animation: pulsePill 2s infinite ease-in-out;
-  transition: opacity 0.4s ease, visibility 0.4s ease, transform 0.4s ease;
-  white-space: nowrap;
-  pointer-events: auto;
-  user-select: none;
-}
-
-.tap-to-play-hint.hidden {
-  opacity: 0;
-  visibility: hidden;
-  transform: translateX(-50%) translateY(25px);
-  pointer-events: none;
-}
-
-@keyframes pulsePill {
-  0%, 100% { transform: translateX(-50%) scale(1); }
-  50% { transform: translateX(-50%) scale(1.04); }
-}
-
 /* Main Showcase */
 .invitation-screen {
   width: 100%;

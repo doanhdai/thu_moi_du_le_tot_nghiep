@@ -301,11 +301,10 @@
   }
 
   /* ==========================================================================
-     2. Background Music Autoplay & Controller
+     2. Background Music Autoplay & Controller (Silent, Immediate)
      ========================================================================== */
   const bgAudio = document.getElementById('bg-music');
   const musicBtn = document.getElementById('music-toggle-btn');
-  const tapHint = document.getElementById('tap-to-play');
 
   function updateMusicUI(isPlaying) {
     if (musicBtn) {
@@ -315,56 +314,46 @@
         musicBtn.classList.remove('playing');
       }
     }
-    if (tapHint) {
-      if (isPlaying) {
-        tapHint.classList.add('hidden');
-      }
-    }
   }
 
-  function startAudio() {
+  function playAudio() {
     if (!bgAudio) return;
-    const playPromise = bgAudio.play();
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => {
-          updateMusicUI(true);
-          if (tapHint) tapHint.classList.add('hidden');
-        })
-        .catch(() => {
-          // Bị trình duyệt di động chặn unmuted autoplay
-          updateMusicUI(false);
-          if (tapHint) tapHint.classList.remove('hidden');
-        });
+    const p = bgAudio.play();
+    if (p !== undefined) {
+      p.then(() => {
+        updateMusicUI(true);
+      }).catch(() => {
+        updateMusicUI(false);
+      });
     }
   }
 
-  // 1. Thử phát ngay lập tức khi tải trang
+  // 1. Tự động phát ngay lập tức khi mở web
+  playAudio();
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', startAudio);
+    document.addEventListener('DOMContentLoaded', playAudio);
   } else {
-    startAudio();
+    playAudio();
   }
-  window.addEventListener('load', startAudio);
+  window.addEventListener('load', playAudio);
+  window.addEventListener('pageshow', playAudio);
 
-  // 2. Tự động phát ngay khi người dùng chạm bất kỳ đâu vào màn hình
-  let userInteracted = false;
-  function handleAnyUserInteraction() {
-    if (userInteracted && bgAudio && !bgAudio.paused) return;
+  // Hỗ trợ webview Zalo & WeChat tự kích hoạt âm thanh
+  document.addEventListener('ZaloJSBridgeReady', playAudio);
+  document.addEventListener('WeixinJSBridgeReady', playAudio);
 
-    if (bgAudio) {
+  // 2. Chạm âm thầm vào bất kỳ vị trí nào trên màn hình để phát ngay nếu trình duyệt chặn
+  const silentEvents = ['touchstart', 'touchend', 'click', 'pointerdown', 'pointerup', 'scroll'];
+  function onSilentTouch() {
+    if (bgAudio && bgAudio.paused) {
       bgAudio.play().then(() => {
-        userInteracted = true;
         updateMusicUI(true);
-        if (tapHint) tapHint.classList.add('hidden');
       }).catch(() => { });
     }
   }
-
-  const interactionEvents = ['touchstart', 'touchend', 'click', 'pointerdown', 'pointerup', 'scroll'];
-  interactionEvents.forEach(evt => {
-    window.addEventListener(evt, handleAnyUserInteraction, { capture: true, passive: true });
-    document.addEventListener(evt, handleAnyUserInteraction, { capture: true, passive: true });
+  silentEvents.forEach(evt => {
+    window.addEventListener(evt, onSilentTouch, { capture: true, passive: true });
+    document.addEventListener(evt, onSilentTouch, { capture: true, passive: true });
   });
 
   // 3. Nút đĩa than bật/tắt thủ công
@@ -377,18 +366,6 @@
         bgAudio.pause();
         updateMusicUI(false);
       }
-    });
-  }
-
-  // 4. Nhấn trực tiếp vào gợi ý bật nhạc
-  if (tapHint && bgAudio) {
-    tapHint.addEventListener('click', (e) => {
-      e.stopPropagation();
-      bgAudio.play().then(() => {
-        userInteracted = true;
-        updateMusicUI(true);
-        tapHint.classList.add('hidden');
-      }).catch(() => { });
     });
   }
 

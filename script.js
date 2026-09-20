@@ -104,11 +104,11 @@
           decay: 0.022 + Math.random() * 0.025
         });
       }
-    }
+    window.addStarBurst = addStarBurst;
 
     // Touch & pointer listener for sparkle bursts
     window.addEventListener('pointerdown', (e) => {
-      if (e.target.closest('#music-toggle-btn')) return;
+      if (e.target.closest('#music-btn') || e.target.closest('#open-invitation-btn')) return;
       addStarBurst(e.clientX, e.clientY);
     });
 
@@ -308,20 +308,40 @@
 
   function updateMusicUI(isPlaying) {
     if (musicBtn) {
-      if (isPlaying) {
+      const isMuted = bgAudio && bgAudio.muted;
+      if (isPlaying && !isMuted) {
         musicBtn.classList.add('playing');
       } else {
         musicBtn.classList.remove('playing');
       }
+      musicBtn.setAttribute('aria-pressed', String(Boolean(isPlaying && !isMuted)));
+      musicBtn.setAttribute(
+        'aria-label',
+        isPlaying && !isMuted ? 'Tắt nhạc nền' : isPlaying ? 'Bật âm thanh nhạc nền' : 'Bật nhạc nền'
+      );
+      musicBtn.title = isPlaying && !isMuted ? 'Tắt nhạc' : isPlaying ? 'Bật âm thanh' : 'Bật nhạc';
     }
   }
 
   function startAudio() {
-    if (!bgAudio) return;
-    bgAudio.play().then(() => {
+    if (!bgAudio) return Promise.resolve(false);
+
+    // Browsers that allow audible autoplay will take this path.
+    bgAudio.muted = false;
+    return bgAudio.play().then(() => {
       updateMusicUI(true);
+      return true;
     }).catch(() => {
-      updateMusicUI(false);
+      // Most mobile browsers block autoplay with sound. Start muted instead so
+      // the track is ready; the first tap/scroll/key press below unmutes it.
+      bgAudio.muted = true;
+      return bgAudio.play().then(() => {
+        updateMusicUI(true);
+        return true;
+      }).catch(() => {
+        updateMusicUI(false);
+        return false;
+      });
     });
   }
 
@@ -342,10 +362,15 @@
   // 2. Play upon first user interaction if browser blocked unmuted autoplay
   const interactionEvents = ['click', 'touchstart', 'scroll', 'keydown', 'pointerdown'];
   function handleFirstInteraction() {
-    if (bgAudio && bgAudio.paused) {
-      bgAudio.play().then(() => {
+    if (bgAudio) {
+      // This runs synchronously in the user gesture, which lets Safari and
+      // Chrome switch from silent autoplay to audible playback.
+      bgAudio.muted = false;
+      if (bgAudio.paused) {
+        bgAudio.play().then(() => updateMusicUI(true)).catch(() => updateMusicUI(false));
+      } else {
         updateMusicUI(true);
-      }).catch(() => { });
+      }
     }
     interactionEvents.forEach(evt => window.removeEventListener(evt, handleFirstInteraction));
   }
@@ -356,7 +381,11 @@
     musicBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       if (bgAudio.paused) {
-        bgAudio.play().then(() => updateMusicUI(true)).catch(() => { });
+        bgAudio.muted = false;
+        bgAudio.play().then(() => updateMusicUI(true)).catch(() => updateMusicUI(false));
+      } else if (bgAudio.muted) {
+        bgAudio.muted = false;
+        updateMusicUI(true);
       } else {
         bgAudio.pause();
         updateMusicUI(false);
@@ -367,10 +396,41 @@
   if (bgAudio) {
     bgAudio.addEventListener('play', () => updateMusicUI(true));
     bgAudio.addEventListener('pause', () => updateMusicUI(false));
+    bgAudio.addEventListener('volumechange', () => updateMusicUI(!bgAudio.paused));
   }
 
   /* ==========================================================================
-     3. Dynamic UI Image Cropping for Mobile (Zero Scroll, Phone Number 100% Protected)
+     3. Invitation Opening Screen
+     ========================================================================== */
+  const invitationGate = document.getElementById('invitation-gate');
+  const openInvitationBtn = document.getElementById('open-invitation-btn');
+
+  function openInvitation(e) {
+    if (typeof window.addStarBurst === 'function') {
+      const x = e && e.clientX ? e.clientX : window.innerWidth / 2;
+      const y = e && e.clientY ? e.clientY : window.innerHeight / 2;
+      window.addStarBurst(x, y);
+      window.addStarBurst(x, y);
+    }
+    if (invitationGate && !invitationGate.classList.contains('is-opening')) {
+      invitationGate.classList.add('is-opening');
+      invitationGate.setAttribute('aria-hidden', 'true');
+      window.setTimeout(() => invitationGate.remove(), 450);
+    }
+
+    // Calling play() inside the button action satisfies mobile autoplay policy.
+    if (bgAudio) {
+      bgAudio.muted = false;
+      bgAudio.play().then(() => updateMusicUI(true)).catch(() => updateMusicUI(false));
+    }
+  }
+
+  if (openInvitationBtn) {
+    openInvitationBtn.addEventListener('click', openInvitation);
+  }
+
+  /* ==========================================================================
+     4. Dynamic UI Image Cropping for Mobile (Zero Scroll, Phone Number 100% Protected)
      ========================================================================== */
   function adjustImageCropForMobile() {
     const img = document.getElementById('invitation-img');

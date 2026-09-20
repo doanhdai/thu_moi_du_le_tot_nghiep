@@ -370,7 +370,7 @@
   }
 
   /* ==========================================================================
-     3. Dynamic UI Image Cropping for Mobile (Zero Scroll, Guaranteed Full Width)
+     3. Dynamic UI Image Cropping for Mobile (Zero Scroll, Phone Number 100% Protected)
      ========================================================================== */
   function adjustImageCropForMobile() {
     const img = document.getElementById('invitation-img');
@@ -379,60 +379,70 @@
 
     if (window.innerWidth <= 768) {
       const winW = window.innerWidth;
-      const winH = window.innerHeight;
+      // Dùng window.innerHeight kết hợp documentElement.clientHeight
+      const winH = window.innerHeight || document.documentElement.clientHeight;
 
-      // 1. Khung chứa bung tràn tuyệt đối 100vw x winH
+      const naturalW = img.naturalWidth || 840;
+      const naturalH = img.naturalHeight || 1871;
+
+      // Chiều cao tự nhiên của ảnh khi bung chạm 2 mép màn hình 100vw
+      const renderedTotalH = winW * (naturalH / naturalW);
+
+      // Số hàng ảnh (rows) tương ứng với chiều cao màn hình hiện tại
+      const visibleRows = winH * (naturalW / winW);
+      const excessRows = Math.max(0, naturalH - visibleRows);
+
+      // Cắt bỏ phần giấy trắng thừa ở đáy trước (từ row 1871 xuống tối đa row 1690)
+      // Row 1655 là đáy chữ "Contact: 0384574324", giữ đến row 1690 để có khoảng đệm ~16px an toàn dưới số điện thoại
+      const maxBottomCrop = 1871 - 1690; // 181 rows giấy trắng thừa ở đáy
+      const bottomCropRows = Math.max(0, Math.min(excessRows, maxBottomCrop));
+      const remainingExcess = excessRows - bottomCropRows;
+
+      // Nếu vẫn còn dài hơn màn hình, cắt tiếp phần chóp đèn disco ở đỉnh (tối đa đến row 190)
+      // Chữ "Thank you for being a part of my youth..." bắt đầu ở row 240 -> row 190 cách chữ 50px cực kỳ an toàn
+      const maxTopCrop = 190;
+      const topCropRows = Math.max(0, Math.min(remainingExcess, maxTopCrop));
+
+      const topCut = topCropRows;
+      const bottomCut = naturalH - bottomCropRows;
+
+      // Tính chiều cao khung chứa và độ dịch chuyển đỉnh ảnh
+      const frameH = (bottomCut - topCut) * (winW / naturalW);
+      const topCropPx = topCut * (winW / naturalW);
+
+      // Thiết lập khung chứa tràn viền 100vw
       frame.style.setProperty('width', '100vw', 'important');
       frame.style.setProperty('min-width', '100vw', 'important');
       frame.style.setProperty('max-width', '100vw', 'important');
-      frame.style.setProperty('height', winH + 'px', 'important');
-      frame.style.setProperty('max-height', winH + 'px', 'important');
+      frame.style.setProperty('height', `${frameH.toFixed(1)}px`, 'important');
+      frame.style.setProperty('min-height', 'auto', 'important');
+      frame.style.setProperty('max-height', 'none', 'important');
       frame.style.setProperty('overflow', 'hidden', 'important');
       frame.style.setProperty('position', 'relative', 'important');
       frame.style.setProperty('margin', '0', 'important');
       frame.style.setProperty('padding', '0', 'important');
       frame.style.setProperty('background', 'transparent', 'important');
 
-      const naturalW = img.naturalWidth || 840;
-      const naturalH = img.naturalHeight || 1871;
-
-      // Chiều cao tự nhiên khi bung chạm 2 mép màn hình (width = winW)
-      const renderedH = winW * (naturalH / naturalW);
-
+      // Định vị ảnh bên trong khung: dịch lên trên đúng topCropPx, mép dưới vừa khít bottomCut (row 1690)
+      img.style.setProperty('position', 'absolute', 'important');
       img.style.setProperty('left', '0', 'important');
       img.style.setProperty('right', '0', 'important');
+      img.style.setProperty('top', `-${topCropPx.toFixed(1)}px`, 'important');
       img.style.setProperty('width', '100vw', 'important');
       img.style.setProperty('min-width', '100vw', 'important');
       img.style.setProperty('max-width', '100vw', 'important');
+      img.style.setProperty('height', `${renderedTotalH.toFixed(1)}px`, 'important');
+      img.style.setProperty('max-height', 'none', 'important');
+      img.style.setProperty('object-fit', 'fill', 'important');
       img.style.setProperty('margin', '0', 'important');
       img.style.setProperty('padding', '0', 'important');
-
-      if (renderedH >= winH) {
-        // Ảnh dài hơn màn hình: Cắt bớt phần đỉnh một chút, phần còn lại cắt ở đáy
-        const excessH = renderedH - winH;
-        const maxTopCrop = renderedH * 0.038;
-        const topCrop = Math.min(excessH * 0.25, maxTopCrop);
-
-        img.style.setProperty('position', 'absolute', 'important');
-        img.style.setProperty('top', `-${topCrop.toFixed(1)}px`, 'important');
-        img.style.setProperty('height', renderedH + 'px', 'important');
-        img.style.setProperty('max-height', 'none', 'important');
-        img.style.setProperty('object-fit', 'fill', 'important');
-      } else {
-        // Màn hình rất dài: Phủ kín 100% màn hình không để lộ khoảng trống 2 bên
-        img.style.setProperty('position', 'absolute', 'important');
-        img.style.setProperty('top', '0', 'important');
-        img.style.setProperty('height', winH + 'px', 'important');
-        img.style.setProperty('max-height', winH + 'px', 'important');
-        img.style.setProperty('object-fit', 'cover', 'important');
-        img.style.setProperty('object-position', 'center 35%', 'important');
-      }
     } else {
-      // Desktop: Reset để khung mockup hiển thị bình thường
+      // Desktop: Reset về trạng thái khung mockup ban đầu
       frame.style.removeProperty('width');
       frame.style.removeProperty('min-width');
       frame.style.removeProperty('max-width');
       frame.style.removeProperty('height');
+      frame.style.removeProperty('min-height');
       frame.style.removeProperty('max-height');
       frame.style.removeProperty('overflow');
       frame.style.removeProperty('position');
@@ -469,5 +479,7 @@
   window.addEventListener('orientationchange', () => {
     setTimeout(adjustImageCropForMobile, 120);
   });
+  document.addEventListener('DOMContentLoaded', adjustImageCropForMobile);
+  window.addEventListener('load', adjustImageCropForMobile);
 
 })();

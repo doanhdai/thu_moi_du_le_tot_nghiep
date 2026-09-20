@@ -104,6 +104,7 @@
           decay: 0.022 + Math.random() * 0.025
         });
       }
+    }
     window.addStarBurst = addStarBurst;
 
     // Touch & pointer listener for sparkle bursts

@@ -301,10 +301,10 @@
   }
 
   /* ==========================================================================
-     2. Background Music Autoplay & Controller (Silent, Immediate)
+     2. Background Music Autoplay & Controller (from thiepcuoionline)
      ========================================================================== */
-  const bgAudio = document.getElementById('bg-music');
-  const musicBtn = document.getElementById('music-toggle-btn');
+  const bgAudio = document.getElementById('wedding-audio') || document.getElementById('bg-music');
+  const musicBtn = document.getElementById('music-btn') || document.getElementById('music-toggle-btn');
 
   function updateMusicUI(isPlaying) {
     if (musicBtn) {
@@ -316,47 +316,42 @@
     }
   }
 
-  function playAudio() {
+  function startAudio() {
     if (!bgAudio) return;
-    const p = bgAudio.play();
-    if (p !== undefined) {
-      p.then(() => {
-        updateMusicUI(true);
-      }).catch(() => {
-        updateMusicUI(false);
-      });
-    }
+    bgAudio.play().then(() => {
+      updateMusicUI(true);
+    }).catch(() => {
+      updateMusicUI(false);
+    });
   }
 
-  // 1. Tự động phát ngay lập tức khi mở web
-  playAudio();
+  // 1. Try to autoplay on load
+  startAudio();
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', playAudio);
+    document.addEventListener('DOMContentLoaded', startAudio);
   } else {
-    playAudio();
+    startAudio();
   }
-  window.addEventListener('load', playAudio);
-  window.addEventListener('pageshow', playAudio);
+  window.addEventListener('load', startAudio);
+  window.addEventListener('pageshow', startAudio);
 
   // Hỗ trợ webview Zalo & WeChat tự kích hoạt âm thanh
-  document.addEventListener('ZaloJSBridgeReady', playAudio);
-  document.addEventListener('WeixinJSBridgeReady', playAudio);
+  document.addEventListener('ZaloJSBridgeReady', startAudio);
+  document.addEventListener('WeixinJSBridgeReady', startAudio);
 
-  // 2. Chạm âm thầm vào bất kỳ vị trí nào trên màn hình để phát ngay nếu trình duyệt chặn
-  const silentEvents = ['touchstart', 'touchend', 'click', 'pointerdown', 'pointerup', 'scroll'];
-  function onSilentTouch() {
+  // 2. Play upon first user interaction if browser blocked unmuted autoplay
+  const interactionEvents = ['click', 'touchstart', 'scroll', 'keydown', 'pointerdown'];
+  function handleFirstInteraction() {
     if (bgAudio && bgAudio.paused) {
       bgAudio.play().then(() => {
         updateMusicUI(true);
       }).catch(() => { });
     }
+    interactionEvents.forEach(evt => window.removeEventListener(evt, handleFirstInteraction));
   }
-  silentEvents.forEach(evt => {
-    window.addEventListener(evt, onSilentTouch, { capture: true, passive: true });
-    document.addEventListener(evt, onSilentTouch, { capture: true, passive: true });
-  });
+  interactionEvents.forEach(evt => window.addEventListener(evt, handleFirstInteraction, { passive: true, once: true }));
 
-  // 3. Nút đĩa than bật/tắt thủ công
+  // 3. Music Button toggle
   if (musicBtn && bgAudio) {
     musicBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -367,6 +362,11 @@
         updateMusicUI(false);
       }
     });
+  }
+
+  if (bgAudio) {
+    bgAudio.addEventListener('play', () => updateMusicUI(true));
+    bgAudio.addEventListener('pause', () => updateMusicUI(false));
   }
 
   /* ==========================================================================

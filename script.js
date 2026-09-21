@@ -365,26 +365,17 @@
     if (typeof window.addStarBurst === 'function') {
       // Wave 1: Immediate wax-seal pop
       window.addStarBurst(centerX, centerY);
-      window.addStarBurst(centerX, centerY);
 
-      // Wave 2: Rising envelope sparkle
+      // Wave 2: Smooth expansion sparkle
       window.setTimeout(() => {
         window.addStarBurst(centerX, centerY - 15);
-        window.addStarBurst(centerX, centerY - 15);
-      }, 150);
-
-      // Wave 3: Grand burst as the envelope expands open
-      window.setTimeout(() => {
-        window.addStarBurst(centerX - 30, centerY - 25);
-        window.addStarBurst(centerX + 30, centerY - 25);
-        window.addStarBurst(centerX, centerY - 35);
-      }, 360);
+      }, 200);
     }
 
     if (invitationGate && !invitationGate.classList.contains('is-opening')) {
       invitationGate.classList.add('is-opening');
       invitationGate.setAttribute('aria-hidden', 'true');
-      window.setTimeout(() => invitationGate.remove(), 750);
+      window.setTimeout(() => invitationGate.remove(), 650);
     }
 
     // Calling play() strictly inside the envelope click action satisfies mobile autoplay policy.

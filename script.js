@@ -407,16 +407,33 @@
   const openInvitationBtn = document.getElementById('open-invitation-btn');
 
   function openInvitation(e) {
+    const rect = openInvitationBtn ? openInvitationBtn.getBoundingClientRect() : null;
+    const centerX = rect ? (rect.left + rect.width / 2) : (e && e.clientX ? e.clientX : window.innerWidth / 2);
+    const centerY = rect ? (rect.top + rect.height * 0.52) : (e && e.clientY ? e.clientY : window.innerHeight / 2);
+
     if (typeof window.addStarBurst === 'function') {
-      const x = e && e.clientX ? e.clientX : window.innerWidth / 2;
-      const y = e && e.clientY ? e.clientY : window.innerHeight / 2;
-      window.addStarBurst(x, y);
-      window.addStarBurst(x, y);
+      // Wave 1: Immediate wax-seal pop
+      window.addStarBurst(centerX, centerY);
+      window.addStarBurst(centerX, centerY);
+
+      // Wave 2: Rising envelope sparkle
+      window.setTimeout(() => {
+        window.addStarBurst(centerX, centerY - 15);
+        window.addStarBurst(centerX, centerY - 15);
+      }, 150);
+
+      // Wave 3: Grand burst as the envelope expands open
+      window.setTimeout(() => {
+        window.addStarBurst(centerX - 30, centerY - 25);
+        window.addStarBurst(centerX + 30, centerY - 25);
+        window.addStarBurst(centerX, centerY - 35);
+      }, 360);
     }
+
     if (invitationGate && !invitationGate.classList.contains('is-opening')) {
       invitationGate.classList.add('is-opening');
       invitationGate.setAttribute('aria-hidden', 'true');
-      window.setTimeout(() => invitationGate.remove(), 450);
+      window.setTimeout(() => invitationGate.remove(), 750);
     }
 
     // Calling play() inside the button action satisfies mobile autoplay policy.

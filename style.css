@@ -50,7 +50,7 @@ body {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   opacity: 1;
-  transition: opacity 450ms cubic-bezier(0.16, 1, 0.3, 1), transform 450ms cubic-bezier(0.16, 1, 0.3, 1), visibility 450ms ease;
+  transition: opacity 750ms cubic-bezier(0.22, 1, 0.36, 1), backdrop-filter 750ms ease, visibility 750ms ease;
 }
 
 .gate-envelope {
@@ -224,6 +224,56 @@ body {
   touch-action: manipulation;
   transition: transform 180ms ease, filter 180ms ease;
   animation: none;
+}
+
+/* Expanding Golden Shockwave Ring from Wax Seal */
+.envelope-ripple {
+  position: absolute;
+  top: 52%;
+  left: 50%;
+  width: 50px;
+  height: 50px;
+  margin-top: -25px;
+  margin-left: -25px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 230, 140, 0.95);
+  box-shadow: 0 0 25px rgba(244, 192, 88, 0.9), inset 0 0 15px rgba(214, 40, 57, 0.9);
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.3);
+  z-index: 10;
+}
+
+.envelope-ripple::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+  opacity: 0;
+}
+
+.invitation-gate.is-opening .envelope-ripple {
+  animation: sealRippleExpand 0.72s cubic-bezier(0.1, 0.8, 0.25, 1) forwards;
+}
+
+.invitation-gate.is-opening .envelope-ripple::after {
+  animation: sealRippleExpand 0.72s 0.08s cubic-bezier(0.1, 0.8, 0.25, 1) forwards;
+}
+
+@keyframes sealRippleExpand {
+  0% {
+    opacity: 1;
+    transform: scale(0.3);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(6.5);
+  }
 }
 
 .opening-envelope {
@@ -416,12 +466,58 @@ body {
   box-shadow: 0 0 6px rgba(244, 192, 88, 0.6);
 }
 
-/* Opening exit animation */
+/* Opening exit animation: Envelope expands, bursts with golden light & dissolves */
 .invitation-gate.is-opening {
   opacity: 0;
-  transform: scale(1.06);
-  filter: blur(10px);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
   pointer-events: none;
+}
+
+.invitation-gate.is-opening .open-invitation-btn {
+  pointer-events: none;
+}
+
+.invitation-gate.is-opening .opening-envelope {
+  animation: envelopeOpenMagic 0.75s cubic-bezier(0.2, 0.8, 0.25, 1) forwards !important;
+  will-change: transform, opacity, filter;
+  pointer-events: none;
+}
+
+@keyframes envelopeOpenMagic {
+  0% {
+    transform: perspective(900px) scale(1) translateY(0) rotate(0deg);
+    filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.52)) brightness(1);
+    opacity: 1;
+  }
+
+  14% {
+    /* Anticipation: gentle press down into the wax seal */
+    transform: perspective(900px) scale(0.93) translateY(4px) rotate(-1.5deg);
+    filter: drop-shadow(0 8px 16px rgba(214, 40, 57, 0.55)) drop-shadow(0 0 20px rgba(255, 215, 0, 0.6)) brightness(1.18);
+    opacity: 1;
+  }
+
+  42% {
+    /* Seal pops: envelope springs upwards & towards camera with golden glow */
+    transform: perspective(900px) scale(1.22) translateY(-16px) rotateX(10deg);
+    filter: drop-shadow(0 26px 42px rgba(214, 40, 57, 0.45)) drop-shadow(0 0 35px rgba(255, 220, 120, 0.9)) brightness(1.32);
+    opacity: 1;
+  }
+
+  70% {
+    /* Expands open wide, revealing invitation card beneath */
+    transform: perspective(900px) scale(1.6) translateY(-28px) rotateX(16deg);
+    filter: drop-shadow(0 34px 55px rgba(244, 192, 88, 0.6)) drop-shadow(0 0 50px rgba(255, 255, 255, 0.9)) brightness(1.4);
+    opacity: 0.7;
+  }
+
+  100% {
+    /* Dissolves into stardust */
+    transform: perspective(900px) scale(2.2) translateY(-40px) rotateX(22deg);
+    filter: blur(12px) brightness(1.6);
+    opacity: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

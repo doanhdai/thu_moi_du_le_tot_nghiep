@@ -29,19 +29,11 @@
   <!-- Background Music Audio -->
   <audio id="wedding-audio" autoplay loop preload="auto" playsinline src="./audio.mp3"></audio>
 
-  <!-- Opening Screen: Scrapbook Graduation Envelope Theme -->
-  <section id="invitation-gate" class="invitation-gate" role="dialog" aria-modal="true" aria-labelledby="gate-title">
-    <div class="gate-envelope">
-      <h1 id="gate-title" class="gate-title">Invitation</h1>
-
-      <p class="gate-quote">“Thank you for being a part of my youth”</p>
-
-      <!-- The Redesigned Open Button matching image style -->
-      <button id="open-invitation-btn" class="open-invitation-btn" type="button" aria-label="Open">
-        <span class="btn-shimmer"></span>
-        <span class="btn-main-title">OPEN</span>
-      </button>
-    </div>
+  <!-- Opening Screen: tap the envelope to open the invitation -->
+  <section id="invitation-gate" class="invitation-gate" role="dialog" aria-modal="true" aria-label="Mở thiệp mời">
+    <button id="open-invitation-btn" class="open-invitation-btn" type="button" aria-label="Mở thiệp và bật nhạc">
+      <img class="opening-envelope" src="thu_open.png" alt="">
+    </button>
   </section>
 
   <!-- Floating Music Toggle Button -->

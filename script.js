@@ -107,8 +107,9 @@
     }
     window.addStarBurst = addStarBurst;
 
-    // Touch & pointer listener for sparkle bursts
+    // Touch & pointer listener for sparkle bursts (only active after opening the envelope)
     window.addEventListener('pointerdown', (e) => {
+      if (document.getElementById('invitation-gate')) return;
       if (e.target.closest('#music-btn') || e.target.closest('#open-invitation-btn')) return;
       addStarBurst(e.clientX, e.clientY);
     });
@@ -324,60 +325,7 @@
     }
   }
 
-  function startAudio() {
-    if (!bgAudio) return Promise.resolve(false);
-
-    // Browsers that allow audible autoplay will take this path.
-    bgAudio.muted = false;
-    return bgAudio.play().then(() => {
-      updateMusicUI(true);
-      return true;
-    }).catch(() => {
-      // Most mobile browsers block autoplay with sound. Start muted instead so
-      // the track is ready; the first tap/scroll/key press below unmutes it.
-      bgAudio.muted = true;
-      return bgAudio.play().then(() => {
-        updateMusicUI(true);
-        return true;
-      }).catch(() => {
-        updateMusicUI(false);
-        return false;
-      });
-    });
-  }
-
-  // 1. Try to autoplay on load
-  startAudio();
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', startAudio);
-  } else {
-    startAudio();
-  }
-  window.addEventListener('load', startAudio);
-  window.addEventListener('pageshow', startAudio);
-
-  // Hỗ trợ webview Zalo & WeChat tự kích hoạt âm thanh
-  document.addEventListener('ZaloJSBridgeReady', startAudio);
-  document.addEventListener('WeixinJSBridgeReady', startAudio);
-
-  // 2. Play upon first user interaction if browser blocked unmuted autoplay
-  const interactionEvents = ['click', 'touchstart', 'scroll', 'keydown', 'pointerdown'];
-  function handleFirstInteraction() {
-    if (bgAudio) {
-      // This runs synchronously in the user gesture, which lets Safari and
-      // Chrome switch from silent autoplay to audible playback.
-      bgAudio.muted = false;
-      if (bgAudio.paused) {
-        bgAudio.play().then(() => updateMusicUI(true)).catch(() => updateMusicUI(false));
-      } else {
-        updateMusicUI(true);
-      }
-    }
-    interactionEvents.forEach(evt => window.removeEventListener(evt, handleFirstInteraction));
-  }
-  interactionEvents.forEach(evt => window.addEventListener(evt, handleFirstInteraction, { passive: true, once: true }));
-
-  // 3. Music Button toggle
+  // Music Button toggle (allows manual play/pause after opening or anytime)
   if (musicBtn && bgAudio) {
     musicBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -407,6 +355,9 @@
   const openInvitationBtn = document.getElementById('open-invitation-btn');
 
   function openInvitation(e) {
+    if (e) {
+      e.stopPropagation();
+    }
     const rect = openInvitationBtn ? openInvitationBtn.getBoundingClientRect() : null;
     const centerX = rect ? (rect.left + rect.width / 2) : (e && e.clientX ? e.clientX : window.innerWidth / 2);
     const centerY = rect ? (rect.top + rect.height * 0.52) : (e && e.clientY ? e.clientY : window.innerHeight / 2);
@@ -436,15 +387,30 @@
       window.setTimeout(() => invitationGate.remove(), 750);
     }
 
-    // Calling play() inside the button action satisfies mobile autoplay policy.
+    // Calling play() strictly inside the envelope click action satisfies mobile autoplay policy.
     if (bgAudio) {
       bgAudio.muted = false;
       bgAudio.play().then(() => updateMusicUI(true)).catch(() => updateMusicUI(false));
     }
   }
 
+  // Only clicking the envelope image triggers open & music
   if (openInvitationBtn) {
     openInvitationBtn.addEventListener('click', openInvitation);
+  }
+
+  // Clicks outside the envelope on the gate backdrop do NOT open and do NOT play music
+  if (invitationGate) {
+    invitationGate.addEventListener('click', (e) => {
+      if (!e.target.closest('#open-invitation-btn')) {
+        e.stopPropagation();
+      }
+    });
+    invitationGate.addEventListener('pointerdown', (e) => {
+      if (!e.target.closest('#open-invitation-btn')) {
+        e.stopPropagation();
+      }
+    });
   }
 
   /* ==========================================================================
